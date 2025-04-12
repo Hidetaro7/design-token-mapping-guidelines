@@ -46,107 +46,168 @@
   }
 }
 ```
-
 この指定により、「1remは距離・余白を意味する」という情報が明確になります。
+
+---
+
+## 2.1 カラー設計方針（OKLCHベース）
+
+- カラーはすべて `oklch(L C H)` 形式で定義し、色相 (`H`) を保ちながら明度 (`L`) と彩度 (`C`) を操作して階調を展開する。
+- 階調展開例：
+  - `primary/100` → 明度95%（背景色や非アクティブ状態）
+  - `primary/500` → 明度60%（通常状態）
+  - `primary/700` → 明度40%（hoverやactiveなど）
+
+```json
+"color": {
+  "primary": {
+    "100": { "$value": "oklch(95% 0.02 240)", "$type": "color" },
+    "500": { "$value": "oklch(60% 0.15 240)", "$type": "color" },
+    "700": { "$value": "oklch(40% 0.15 240)", "$type": "color" }
+  },
+  "background": {
+    "DEFAULT": { "$value": "oklch(98% 0.01 260)", "$type": "color" }
+  },
+  "text": {
+    "DEFAULT": { "$value": "oklch(15% 0.02 260)", "$type": "color" }
+  }
+}
+```
+
+---
+
+## 2.2 タイポグラフィ設計方針
+
+- タイポグラフィは用途ベースで命名（例：`heading-md`, `body-sm`）し、Tailwindのユーティリティクラスを `$value` に記述。
+- `typography` 型は `text-*`, `font-*`, `leading-*` などを組み合わせた**見た目の粒度定義**として利用する。
+
+```json
+"font": {
+  "heading-md": {
+    "$value": "text-lg font-bold",
+    "$type": "typography"
+  },
+  "body-sm": {
+    "$value": "text-sm font-sans",
+    "$type": "typography"
+  }
+}
+```
 
 ---
 
 ## 3. Figma変数の命名ルール
 
-| Figma Variable | Tailwind Utility | 備考 |
-|----------------|------------------|------|
-| `spacing/4`    | `p-4`, `m-4`     | `1rem` |
-| `color/primary`| `bg-primary`, `text-primary` | メインカラー |
-| `radius/md`    | `rounded-md`     | `0.375rem` |
-| `font/heading-md` | `text-lg font-bold` | 中見出し |
-| `font/body-sm` | `text-sm font-sans` | 小文本 |
+| Figma Variable        | Tailwind Utility               | 備考                   |
+|------------------------|--------------------------------|------------------------|
+| `spacing/4`           | `p-4`, `m-4`                   | `1rem`                |
+| `color/primary`       | `bg-primary`, `text-primary`   | メインカラー           |
+| `radius/md`           | `rounded-md`                   | `0.375rem`             |
+| `font/heading-md`     | `text-lg font-bold`            | 中見出し               |
+| `font/body-sm`        | `text-sm font-sans`            | 小文本                 |
+| `fontFamily/sans`     | `font-sans`                    | デフォルトフォント      |
+| `fontSize/sm`         | `text-sm`                      | 小サイズテキスト       |
+| `borderRadius/full`   | `rounded-full`                 | 完全な角丸              |
 
 ---
 
-## 4. Figmaコンポーネントの命名ルール
+## 4. コンポーネント命名と状態管理ルール
 
-- Semantic階層を `/` で区切る。
-  - 例: `Card/WithCTA`, `Form/Input/WithLabel`
-- 状態やバリアントは `.` で表す。
-  - 例: `Button/Primary.Hover`
+> 例：
+> - `Button/Primary.Hover` → プライマリボタンのホバー状態
+> - `Card/WithImage.Focused` → 画像付きカードのフォーカス状態
+
+- コンポーネントの基本構造は `Block/Variant.State` の形式で命名します。
+  - 例：`Button/Primary.Hover`, `Card/WithImage.Focused`
+- 命名構成要素：
+  - `Block`：UI部品の機能名（Button, Card, Formなど）
+  - `Variant`：外観や用途の違い（Primary, Secondary, WithImageなど）
+  - `State`：状態（Hover, Focused, Disabled など）
+
+この構造を守ることで、Figma・tokens.json・CSS・AIコード生成などにおいて一貫した粒度で扱うことができます。
 
 ---
 
-## 5. 共通UIクラス定義
 
-Tailwind CSS v4 の思想に基づき、`@layer components` に加え `@theme` ディレクティブによるカスタムトークン定義をCSSファイル内で行う方式を採用します。これにより `tailwind.config.js` を廃止し、トークンやコンポーネント定義のすべてをCSSベースで記述可能になります。
 
-### カラートークン定義例（@theme使用）
-```css
-@theme {
-  --color-primary-500: oklch(60% 0.15 240);
-  --color-primary-700: oklch(40% 0.15 240);
-  --color-background: oklch(98% 0.01 260);
-  --color-text: oklch(15% 0.02 260);
-  --radius-md: 0.375rem;
-  --spacing-2: 0.5rem;
-  --spacing-4: 1rem;
-  --spacing-6: 1.5rem;
+## 5. 基本コンポーネントのスタイル定義ルール
+
+以下に示す定義は、セクション6の CSS 展開方針に基づいて構成されます。
+
+### .button
+
+```json
+{
+  "background-color": "var(--color-primary-500)",
+  "color": "white",
+  "padding": "var(--spacing-2) var(--spacing-4)",
+  "border-radius": "var(--radius-md)",
+  "font-family": "system-ui, sans-serif",
+  "font-size": "0.875rem",
+  "font-weight": "500",
+  "transition": "background-color 0.3s ease",
+  ":hover": {
+    "background-color": "var(--color-primary-700)"
+  }
 }
 ```
 
-### コンポーネント定義例
+### .input
+
+```json
+{
+  "background-color": "white",
+  "border": "1px solid var(--color-primary-300)",
+  "padding": "var(--spacing-2)",
+  "border-radius": "var(--radius-md)",
+  "font-family": "system-ui, sans-serif",
+  "font-size": "0.875rem",
+  "transition": "border-color 0.2s ease",
+  ":focus": {
+    "border-color": "var(--color-primary-500)"
+  }
+}
+```
+
+---
+
+## 6. トークンのCSS展開：@theme / @layer 指針
+
+Tailwind CSS v4 では、`tailwind.config.js` を用いずに、CSSファイル内でカスタムプロパティとコンポーネントクラスを管理する手法が推奨されます。
+
+### @theme
+
+`@theme` ディレクティブを使うことで、トークンをCSS変数として定義します。
+
+```css
+@theme {
+  --color-primary-500: oklch(60% 0.15 240);
+  --spacing-4: 1rem;
+  --radius-md: 0.375rem;
+}
+```
+
+### @layer components
+
+`@layer components` では、これらのトークンを使ったクラスを定義できます。
+
 ```css
 @layer components {
   .button {
     background-color: var(--color-primary-500);
-    color: white;
-    font-size: 0.875rem;
     padding: var(--spacing-2) var(--spacing-4);
     border-radius: var(--radius-md);
-    font-family: system-ui, sans-serif;
-    transition: background-color 0.3s ease;
   }
 
-  .button:hover {
-    background-color: var(--color-primary-700);
+  .input:focus {
+    border-color: var(--color-primary-500);
   }
 }
 ```
 
----
+この構成により、Tailwind CSSのプリミティブなユーティリティと、デザイントークンを統合したコンポーネント設計が可能になります。
 
-## 6. コンポーネントインベントリ
 
-| クラス名 | 用途 |
-|----------|------|
-| `.button` | CTAボタン (主にPrimary) |
-| `.input`  | テキスト入力、チェックボックス、ラジオなど `<input>` 要素全般 |
-| `.select` | `<select>` 要素に適用される定義スタイル |
-| `.card`   | 框付きレイアウト |
-| `.badge`  | ステータスラベル |
-| `.alert`  | フィードバック通知 |
 
----
 
-## 7. ディレクトリ構成（予定）
 
-```
-.
-├── tokens/              # JSON形式のデザイントークン定義
-│   └── tokens.json
-├── styles/
-│   ├── theme.css        # @theme によるトークン変数定義
-│   └── components.css   # @layer components によるUI定義
-├── docs/
-│   └── design-docs.md   # 設計ガイドライン（本ドキュメント）
-├── README.md            # プロジェクト概要と導線
-```
-
----
-
-## 8. 今後の展開
-
-- `tokens.json`の公開とGitHub管理
-- ChatGPTによる制約付きコード生成プロンプト化
-- Figma → tokens → コンポーネント → Storybook → 実装 の統一プロセス
-- `.button`, `.input`, `.select`のCSS定義の詳細抽出
-- OKLCHによるカラースケール作成ルールの整備
-- Tailwind CSS v4 に最適化された `@theme` + `@layer` 中心のトークン＆コンポーネント設計へ全面移行
-
----
