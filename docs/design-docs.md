@@ -26,29 +26,28 @@
 - ChatGPTなどAIに対し構造化された制約情報を提供できる
 - Tailwind CSSやその他フレームワークへも広く展開しやすい
 
-### トークン例
+### `$type` の意味と活用
+各トークンには `$type` を指定し、値の意味的な型を明示します。これによりツールやAIが適切に処理できます。
+
+| `$type`          | 意味・用途                     | 例                           |
+|------------------|----------------------------------|------------------------------|
+| `color`          | 色を表す                        | `#3B82F6`, `oklch(...)`      |
+| `dimension`      | サイズ・距離・余白など          | `1rem`, `0.5em`, `24px`      |
+| `borderRadius`   | 角丸（border-radius）            | `0.375rem`                   |
+| `typography`     | タイポグラフィ設定（複合情報）   | `text-lg font-bold` など     |
+| `fontFamily`     | フォントファミリー指定           | `Inter, sans-serif`         |
+
+例：
 ```json
-{
-  "spacing": {
-    "4": {
-      "$value": "1rem",
-      "$type": "dimension"
-    }
-  },
-  "color": {
-    "primary": {
-      "500": {
-        "$value": "oklch(60% 0.15 240)",
-        "$type": "color"
-      },
-      "700": {
-        "$value": "oklch(40% 0.15 240)",
-        "$type": "color"
-      }
-    }
+"spacing": {
+  "4": {
+    "$value": "1rem",
+    "$type": "dimension"
   }
 }
 ```
+
+この指定により、「1remは距離・余白を意味する」という情報が明確になります。
 
 ---
 
@@ -151,6 +150,3 @@ Tailwind CSS v4 の思想に基づき、`@layer components` に加え `@theme` �
 - Tailwind CSS v4 に最適化された `@theme` + `@layer` 中心のトークン＆コンポーネント設計へ全面移行
 
 ---
-
-
-
